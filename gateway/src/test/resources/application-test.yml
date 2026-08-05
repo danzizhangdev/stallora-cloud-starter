@@ -1,0 +1,9 @@
+# Tests do not talk to a real Redis or a real auth service. The JWKS URI points nowhere
+# on purpose: a request without a token is rejected before the key set is ever fetched,
+# and the connection is lazy, so the context still starts.
+spring:
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:59999/never-called

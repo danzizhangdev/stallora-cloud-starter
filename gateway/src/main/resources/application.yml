@@ -1,0 +1,45 @@
+server:
+  port: 8080
+spring:
+  application:
+    name: gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: ${JWKS_URI:http://localhost:8081/.well-known/jwks.json}
+  cloud:
+    gateway:
+      routes:
+        - id: auth-route
+          uri: ${AUTH_URI:http://localhost:8081}
+          predicates: [ "Path=/api/auth/**" ]
+          filters: [ "StripPrefix=1" ]
+        - id: sample-route
+          uri: ${SAMPLE_URI:http://localhost:8082}
+          predicates: [ "Path=/api/sample/**" ]
+          filters:
+            - StripPrefix=1
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                key-resolver: "#{@userKeyResolver}"
+            - name: CircuitBreaker
+              args:
+                name: sample
+                fallbackUri: forward:/fallback/sample
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  tracing:
+    sampling:
+      probability: 1.0
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
