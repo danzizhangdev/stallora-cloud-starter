@@ -1,1 +1,2 @@
 io.github.danzizhangdev.stallora.outbox.autoconfigure.OutboxAutoConfiguration
+io.github.danzizhangdev.stallora.outbox.autoconfigure.OutboxRelayAutoConfiguration
