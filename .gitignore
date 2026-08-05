@@ -1,0 +1,51 @@
+# ── Secrets & credentials ─────────────────────────────────────────
+# This repository is PUBLIC. Anything committed here is permanent —
+# git history cannot be scrubbed after the fact. Keep this block first.
+.env
+.env.*
+!.env.example
+*.local.yml
+*.local.yaml
+secrets.yml
+secrets.yaml
+values-secret*.yaml
+settings*.xml
+*.p12
+*.jks
+*.keystore
+*.pem
+*.key
+!**/src/test/resources/**/*.pem
+*.asc
+*.gpg
+*.kubeconfig
+kubeconfig*
+
+# ── Maven build output ────────────────────────────────────────────
+target/
+dependency-reduced-pom.xml
+.mvn/timing.properties
+.flattened-pom.xml
+
+# ── IDE / editor ──────────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+.settings/
+.classpath
+.project
+*.swp
+
+# ── OS ────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Logs & local runtime scratch ──────────────────────────────────
+*.log
+logs/
+hs_err_pid*
+replay_pid*
+/data/
+deploy/**/data/
