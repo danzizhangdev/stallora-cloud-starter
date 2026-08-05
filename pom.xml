@@ -49,7 +49,7 @@
   <properties>
     <java.version>21</java.version>
     <spring-cloud.version>2025.0.0</spring-cloud.version>
-    <testcontainers.version>1.21.3</testcontainers.version>
+    <testcontainers.version>1.21.4</testcontainers.version>
     <springdoc.version>2.8.6</springdoc.version>
     <!-- Spring Boot's BOM does not manage nimbus-jose-jwt on its own; this is the
          version Spring Security 6.5.1 (managed by Boot 3.5.3) resolves to, so hand-signed

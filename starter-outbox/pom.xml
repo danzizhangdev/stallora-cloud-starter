@@ -11,5 +11,20 @@
 
   <artifactId>starter-outbox</artifactId>
   <name>Stallora Starter Outbox</name>
-  <description>Transactional outbox: schema template, local-transaction writer, polling relay, idempotent consumer helper.</description>
+  <description>Transactional outbox: schema template, transactional writer, polling relay to Kafka, idempotent consumer helper.</description>
+
+  <dependencies>
+    <dependency><groupId>org.slf4j</groupId><artifactId>slf4j-api</artifactId></dependency>
+    <dependency><groupId>org.springframework</groupId><artifactId>spring-jdbc</artifactId></dependency>
+    <dependency><groupId>org.springframework</groupId><artifactId>spring-tx</artifactId></dependency>
+    <dependency><groupId>org.springframework.kafka</groupId><artifactId>spring-kafka</artifactId></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-autoconfigure</artifactId><optional>true</optional></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-jdbc</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>junit-jupiter</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>postgresql</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.testcontainers</groupId><artifactId>kafka</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>test</scope></dependency>
+    <dependency><groupId>org.awaitility</groupId><artifactId>awaitility</artifactId><scope>test</scope></dependency>
+  </dependencies>
 </project>
