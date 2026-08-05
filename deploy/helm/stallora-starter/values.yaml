@@ -1,0 +1,29 @@
+imageTag: dev
+imagePullPolicy: Never        # images are imported into k3d, never pulled
+
+# The application layer has no Kubernetes-specific configuration: discovery is Service DNS
+# and configuration is environment variables, so these are the same values the compose file
+# passes. That is the whole claim of ADR-0010, expressed as data.
+apps:
+  - name: gateway
+    port: 8080
+    env:
+      REDIS_HOST: redis
+      JWKS_URI: http://auth:8081/.well-known/jwks.json
+      AUTH_URI: http://auth:8081
+      SAMPLE_URI: http://sample-service:8082
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+  - name: auth
+    port: 8081
+    env:
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+  - name: sample-service
+    port: 8082
+    env:
+      DB_URL: jdbc:postgresql://postgres:5432/sample
+      DB_USER: stallora
+      DB_PASSWORD: stallora
+      KAFKA_SERVERS: kafka:9092
+      JWKS_URI: http://auth:8081/.well-known/jwks.json
+      AUTH_URI: http://auth:8081
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces

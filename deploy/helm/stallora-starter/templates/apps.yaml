@@ -1,0 +1,40 @@
+{{- range .Values.apps }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .name }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels: { app: {{ .name }} }
+  template:
+    metadata:
+      labels: { app: {{ .name }} }
+    spec:
+      containers:
+        - name: {{ .name }}
+          image: stallora/{{ .name }}:{{ $.Values.imageTag }}
+          imagePullPolicy: {{ $.Values.imagePullPolicy }}
+          ports: [ { containerPort: {{ .port }} } ]
+          env:
+            {{- range $k, $v := .env }}
+            - name: {{ $k }}
+              value: {{ $v | quote }}
+            {{- end }}
+          readinessProbe:
+            httpGet: { path: /actuator/health, port: {{ .port }} }
+            initialDelaySeconds: 20
+            periodSeconds: 5
+            failureThreshold: 30
+          resources:
+            limits: { memory: 512Mi }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .name }}
+spec:
+  selector: { app: {{ .name }} }
+  ports: [ { port: {{ .port }}, targetPort: {{ .port }} } ]
+{{- end }}
