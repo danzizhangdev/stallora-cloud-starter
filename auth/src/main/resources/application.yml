@@ -1,0 +1,26 @@
+server:
+  port: 8081
+spring:
+  application:
+    name: auth
+stallora:
+  auth:
+    token-ttl: 1h
+    users:                                  # demo users, plaintext on purpose (documented)
+      - username: alice
+        password: password-alice
+        roles: [admin]
+      - username: bob
+        password: password-bob
+        roles: [user]
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  tracing:
+    sampling:
+      probability: 1.0
+logging:
+  pattern:
+    level: "%5p [${spring.application.name:},%X{traceId:-},%X{spanId:-}]"
