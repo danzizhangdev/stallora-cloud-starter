@@ -1,0 +1,98 @@
+# Full stack, one command. This file IS the C-gate target:
+#   ./deploy/verify-cold-start.sh
+# must bring every healthcheck green and pass the end-to-end probe.
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sample
+      POSTGRES_USER: stallora
+      POSTGRES_PASSWORD: stallora
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stallora -d sample"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  redis:
+    image: redis:7.2-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  kafka:
+    image: apache/kafka:3.9.1
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_HEAP_OPTS: "-Xmx512m -Xms512m"    # REQUIRED: default 1G heap blows the 6GB budget
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/kafka/bin/kafka-broker-api-versions.sh --bootstrap-server localhost:9092 >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 12
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.71.0
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports: ["16686:16686"]
+    # distroless image -> no in-container healthcheck; probed from host by verify-cold-start.sh
+
+  auth:
+    build: ../auth
+    environment:
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+    depends_on:
+      jaeger: { condition: service_started }
+    healthcheck: &app_health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8081/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 18
+      start_period: 30s
+
+  sample-service:
+    build: ../sample-service
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/sample
+      DB_USER: stallora
+      DB_PASSWORD: stallora
+      KAFKA_SERVERS: kafka:9092
+      JWKS_URI: http://auth:8081/.well-known/jwks.json
+      AUTH_URI: http://auth:8081
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+    depends_on:
+      postgres: { condition: service_healthy }
+      kafka: { condition: service_healthy }
+      auth: { condition: service_healthy }
+    healthcheck:
+      <<: *app_health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
+
+  gateway:
+    build: ../gateway
+    ports: ["8080:8080"]
+    environment:
+      REDIS_HOST: redis
+      JWKS_URI: http://auth:8081/.well-known/jwks.json
+      AUTH_URI: http://auth:8081
+      SAMPLE_URI: http://sample-service:8082
+      MANAGEMENT_OTLP_TRACING_ENDPOINT: http://jaeger:4318/v1/traces
+    depends_on:
+      redis: { condition: service_healthy }
+      auth: { condition: service_healthy }
+      sample-service: { condition: service_healthy }
+    healthcheck:
+      <<: *app_health
+      test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]

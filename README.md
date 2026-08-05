@@ -8,7 +8,28 @@ one-command Docker Compose and Helm deployments. Apache-2.0.
 ## Requirements
 
 - JDK 21, Maven 3.9+, Docker
-- Full stack needs ~2.8 GB RAM (measured figure lands here in a later commit)
+- The full stack fits in **under 2 GB of RAM**
+
+### Measured memory
+
+`docker stats` right after `./deploy/verify-cold-start.sh` passed, on an Apple-silicon Mac
+with the Docker VM capped at 6 GiB (limit column reads 5.841 GiB — that cap is the point:
+the gate is not allowed to pass on a machine bigger than a cheap VPS):
+
+| Container | Memory |
+|---|---|
+| gateway | 494.0 MiB |
+| sample-service | 512.2 MiB |
+| auth | 343.4 MiB |
+| kafka | 276.9 MiB |
+| postgres | 37.3 MiB |
+| jaeger | 10.6 MiB |
+| redis | 4.9 MiB |
+| **Total** | **≈ 1.64 GiB (1.76 GB)** |
+
+Three JVMs at `-Xmx256m` account for ~1.3 GiB of that. Kafka is only this small because
+its heap is pinned with `KAFKA_HEAP_OPTS=-Xmx512m -Xms512m`; the image defaults to a 1 GB
+heap, which is the single easiest way to blow a small budget.
 
 ## Quick start
 
