@@ -12,7 +12,7 @@
 
   <groupId>io.github.danzizhangdev</groupId>
   <artifactId>stallora-cloud-starter</artifactId>
-  <version>0.1.0-SNAPSHOT</version>
+  <version>0.1.0</version>
   <packaging>pom</packaging>
 
   <name>Stallora Cloud Starter</name>
@@ -98,6 +98,18 @@
           <publishingServerId>central</publishingServerId>
           <autoPublish>true</autoPublish>
           <waitUntil>published</waitUntil>
+          <!-- Only the two libraries (plus this pom, which consumers need) belong on Central.
+               The three services are reference implementations you copy from.
+               This has to be excludeArtifacts, NOT <skipPublishing> in each service's pom:
+               skipPublishing does not remove a module from the bundle, it only suppresses the
+               upload step - and because the plugin uploads from the LAST reactor module,
+               setting it on a service (which always sorts last, since it depends on the
+               libraries) silently skips the entire release while still reporting BUILD SUCCESS. -->
+          <excludeArtifacts>
+            <artifact>auth</artifact>
+            <artifact>gateway</artifact>
+            <artifact>sample-service</artifact>
+          </excludeArtifacts>
         </configuration>
       </plugin>
     </plugins>
