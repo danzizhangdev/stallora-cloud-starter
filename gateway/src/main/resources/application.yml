@@ -17,7 +17,16 @@ spring:
         - id: auth-route
           uri: ${AUTH_URI:http://localhost:8081}
           predicates: [ "Path=/api/auth/**" ]
-          filters: [ "StripPrefix=1" ]
+          filters:
+            - StripPrefix=1
+            # The login endpoint is the one unauthenticated write in the system, so it is the
+            # one worth rate limiting hardest. Keyed by remote address, since there is no
+            # authenticated subject yet.
+            - name: RequestRateLimiter
+              args:
+                redis-rate-limiter.replenishRate: 2
+                redis-rate-limiter.burstCapacity: 5
+                key-resolver: "#{@userKeyResolver}"
         - id: sample-route
           uri: ${SAMPLE_URI:http://localhost:8082}
           predicates: [ "Path=/api/sample/**" ]

@@ -74,8 +74,32 @@ class SampleServiceTests {
                 "SELECT count(*) FROM sample_event_log WHERE note_id = ?", Integer.class, noteId);
             assertEquals(1, events);
         });
-        assertEquals(1, jdbc.queryForObject(
-                "SELECT count(*) FROM processed_message", Integer.class));
+        // Scoped to this note on purpose: a global count over processed_message only holds
+        // while exactly one test in the class produces an event.
+        assertEquals(1, jdbc.queryForObject("""
+                SELECT count(*) FROM processed_message p
+                JOIN sample_event_log e ON e.message_id = p.message_id
+                WHERE e.note_id = ?""", Integer.class, noteId));
+    }
+
+    /**
+     * Regression: the payload used to be built by string concatenation, escaping only the
+     * double quote. A backslash or a newline in the text produced JSON the consumer could
+     * not parse, so the event died in the listener's retry loop instead of failing loudly.
+     */
+    @Test
+    @WithMockUser
+    void noteWithJsonHostileCharacters_stillRoundTripsThroughTheOutbox() throws Exception {
+        String body = mvc.perform(post("/sample/notes").with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"text\":\"back\\\\slash and \\\"quotes\\\" and a\\nnewline\"}"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString();
+        long noteId = com.jayway.jsonpath.JsonPath.parse(body).read("$.data.id", Long.class);
+
+        Awaitility.await().atMost(Duration.ofSeconds(30)).untilAsserted(() ->
+            assertEquals(1, jdbc.queryForObject(
+                "SELECT count(*) FROM sample_event_log WHERE note_id = ?", Integer.class, noteId)));
     }
 
     @Test

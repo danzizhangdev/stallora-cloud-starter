@@ -26,6 +26,7 @@ public class OutboxRelayAutoConfiguration {
     @ConditionalOnMissingBean
     public OutboxRelay outboxRelay(JdbcTemplate jdbc, PlatformTransactionManager tm,
                                    KafkaTemplate<String, String> kafka, OutboxProperties props) {
-        return new OutboxRelay(jdbc, new TransactionTemplate(tm), kafka, props.relay().batchSize());
+        return new OutboxRelay(jdbc, new TransactionTemplate(tm), kafka,
+                props.relay().batchSize(), props.relay().maxAttempts());
     }
 }
