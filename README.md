@@ -39,14 +39,14 @@ the gate is not allowed to pass on a machine bigger than a cheap VPS):
 
 | Container | Memory |
 |---|---|
-| gateway | 494.0 MiB |
-| sample-service | 512.2 MiB |
-| auth | 343.4 MiB |
-| kafka | 276.9 MiB |
-| postgres | 37.3 MiB |
-| jaeger | 10.6 MiB |
-| redis | 4.9 MiB |
-| **Total** | **≈ 1.64 GiB (1.76 GB)** |
+| sample-service | 488.2 MiB |
+| gateway | 471.4 MiB |
+| auth | 345.9 MiB |
+| kafka | 289.3 MiB |
+| postgres | 38.5 MiB |
+| jaeger | 12.1 MiB |
+| redis | 5.3 MiB |
+| **Total** | **≈ 1.61 GiB (1.73 GB)** |
 
 Three JVMs at `-Xmx256m` account for ~1.3 GiB of that. Kafka is only this small because
 its heap is pinned with `KAFKA_HEAP_OPTS=-Xmx512m -Xms512m`; the image defaults to a 1 GB
