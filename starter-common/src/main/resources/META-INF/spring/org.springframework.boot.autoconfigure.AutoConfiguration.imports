@@ -1,1 +1,2 @@
 io.github.danzizhangdev.stallora.common.autoconfigure.CommonWebAutoConfiguration
+io.github.danzizhangdev.stallora.common.autoconfigure.CommonSecurityAutoConfiguration

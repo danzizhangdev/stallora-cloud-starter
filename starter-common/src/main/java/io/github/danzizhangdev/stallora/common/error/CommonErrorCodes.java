@@ -4,6 +4,7 @@ package io.github.danzizhangdev.stallora.common.error;
 public enum CommonErrorCodes implements ErrorCode {
 
     INTERNAL("CMN-0500", "Unexpected server error", 500),
+    FORBIDDEN("CMN-0403", "Access denied", 403),
     VALIDATION("CMN-0400", "Validation failed", 400),
     NOT_FOUND("CMN-0404", "Resource not found", 404);
 
