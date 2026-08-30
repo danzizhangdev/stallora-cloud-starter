@@ -4,6 +4,8 @@ Production-shaped Spring Cloud starter: gateway, JWT auth, transactional outbox,
 one-command Docker Compose **and** Helm deployments of the same images. Apache-2.0.
 
 > Part of the Stallora project — a multi-vendor commerce platform built in public.
+> The [write-ups](#the-write-ups) explain the decisions behind it; the
+> [complete platform](#the-complete-platform) is a separate, commercial item.
 
 The application layer has no deployment dependencies: discovery is DNS, configuration is
 environment variables. That is why the identical images run under Compose and under
@@ -166,6 +168,24 @@ The relay runs itself: put `starter-outbox` on the classpath, give the service a
 | [0010](docs/adr/0010-platform-native-infrastructure.md) | Platform primitives instead of dedicated middleware: DNS discovery, env config, OTLP tracing, no service registry. |
 | [0011](docs/adr/0011-polling-outbox-over-debezium.md) | A polling relay with SKIP LOCKED instead of Debezium CDC — same semantics, one less distributed system. |
 
+## The write-ups
+
+Eight articles written while this was built, in publication order. They argue the decisions
+rather than walk through the code, so they read on their own; canonical copies live on dev.to.
+
+| Article | What it argues |
+|---|---|
+| [I split a commerce backend into 6 services for a shop with zero users. On purpose.](https://dev.to/danzizhangdev/i-split-a-commerce-backend-into-6-services-for-a-shop-with-zero-users-on-purpose-5133) | Why the split is deliberate over-decomposition ([ADR-0001](docs/adr/0001-deliberately-over-decomposed.md)) — you cannot learn cross-service consistency inside a monolith. |
+| [Publishing a Spring Cloud starter to Maven Central in 2026](https://dev.to/danzizhangdev/publishing-a-spring-cloud-starter-to-maven-central-in-2026-1fp6) | The Central Portal replaced the old OSSRH/JIRA route; four traps that cost real hours, GPG included. |
+| [Your product search does not need Elasticsearch](https://dev.to/danzizhangdev/your-product-search-does-not-need-elasticsearch-1h1h) | A Postgres generated column holds no second copy of the data, so it cannot drift — the line no feature comparison table prints. |
+| [The textbook says cross-service inventory needs a coordinator. This checkout has none.](https://dev.to/danzizhangdev/the-textbook-says-cross-service-inventory-needs-a-coordinator-this-checkout-has-none-lcm) | The invariant is smaller than the transaction: one `WHERE available >= ?` conditional update is the whole defence. |
+| [The outbox pattern is four sentences in a blog post. Here are three incidents from running it.](https://dev.to/danzizhangdev/the-outbox-pattern-is-four-sentences-in-a-blog-post-here-are-three-incidents-from-running-it-4iek) | Poison messages that block the queue for good, attempts that are never counted, consumers that are not actually idempotent. |
+| [Never split the money on payment success](https://dev.to/danzizhangdev/never-split-the-money-on-payment-success-32ob) | Settling on `paid_at` turns every refund into a cross-party collection problem; settling after the return window means you never owed it. |
+| [What may degrade, and what must fail fast](https://dev.to/danzizhangdev/what-may-degrade-and-what-must-fail-fast-4l4l) | A four-row degradation table — what is allowed to serve stale data, and what has to refuse — with the incident behind each row. |
+| [Six services, 6 GB, one command: what it takes to make a microservice stack shippable](https://dev.to/danzizhangdev/six-services-6-gb-one-command-what-it-takes-to-make-a-microservice-stack-shippable-20mc) | The distance between "it runs on my machine" and "a stranger runs it from nothing": the cold-start gate, and the memory budget it has to fit. |
+
+Cross-posted to [Medium](https://medium.com/@danzizhangdev) with canonical links back to dev.to.
+
 ## Third-party components and licences
 
 | Component | Licence |
@@ -209,6 +229,32 @@ These are deliberate for a starter, and each one is a one-file change when you n
   `stallora.outbox.relay.max-attempts` (default 10) the row moves to `status='FAILED'` so it
   stops blocking every later row in the same topic. There is no dead-letter topic yet:
   `SELECT * FROM outbox_message WHERE status='FAILED'` is the queue you have to watch.
+
+## The complete platform
+
+This repository is the foundation, extracted and released on its own. The system it was
+extracted from — **Stallora**, a working multi-vendor marketplace — is a commercial item:
+
+<https://codecanyon.net/item/stallora-flutter-multivendor-ecommerce-platform-with-spring-boot-microservices/64770450>
+
+Full source: a Spring Cloud Gateway in front of five business services — `auth`, `catalog`,
+`inventory`, `order`, `settlement`, each with its own PostgreSQL database and no reads into
+anyone else's tables, six JVMs in all — plus a server-rendered Next.js storefront, an admin
+console, a seller portal, and a Flutter app for iOS and Android.
+Several shops sell through one storefront, a basket can hold items from all of them, checkout
+splits the order into one delivery per shop, and each shop is settled separately with
+commission taken.
+
+Two things to know before you look:
+
+- **It needs a VPS with at least 6 GB of RAM (8 GB recommended) and Docker.** Measured peak on
+  a cold start is 3.35 GB across thirteen containers — this starter's 1.61 GiB is seven
+  containers and three JVMs, not the same number. Shared hosting and cPanel cannot run it at
+  all.
+- **Payments are mocked on purpose.** One interface to implement, documented step by step.
+
+Nothing here changes because of that: this repository stays Apache-2.0, and the two libraries
+stay on Maven Central.
 
 ## Licence
 
