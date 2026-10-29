@@ -235,7 +235,7 @@ These are deliberate for a starter, and each one is a one-file change when you n
 This repository is the foundation, extracted and released on its own. The system it was
 extracted from — **Stallora**, a working multi-vendor marketplace — is a commercial item:
 
-<https://codecanyon.net/item/stallora-flutter-multivendor-ecommerce-platform-with-spring-boot-microservices/64770450>
+<https://coderqh.com/products/stallora/?utm_source=github&utm_medium=readme&utm_campaign=stallora&utm_content=cloud-starter>
 
 Full source: a Spring Cloud Gateway in front of five business services — `auth`, `catalog`,
 `inventory`, `order`, `settlement`, each with its own PostgreSQL database and no reads into
